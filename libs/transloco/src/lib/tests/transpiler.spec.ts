@@ -167,6 +167,27 @@ describe('TranslocoTranspiler', () => {
       expect(parsed).toEqual('one, two');
     });
 
+    it(`GIVEN a FunctionalTranspiler instance
+        WHEN a function transpiler throws an error
+        THEN the rethrown error should preserve the original error as its cause`, () => {
+      const originalError = new Error('boom');
+      vi.spyOn(transpilerFunctions['throwing'], 'transpile').mockImplementation(
+        () => {
+          throw originalError;
+        },
+      );
+
+      let caughtError: unknown;
+      try {
+        transpiler.transpile(getTranspilerParams('[[ throwing() ]]'));
+      } catch (e) {
+        caughtError = e;
+      }
+
+      expect(caughtError).toBeInstanceOf(Error);
+      expect((caughtError as Error).cause).toBe(originalError);
+    });
+
     describe('getFunctionArgs', () => {
       it(`GIVEN an empty string of raw arguments
           WHEN parsing the function arguments
